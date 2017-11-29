@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Observable;
 
 import sun.audio.*;
 
@@ -29,6 +30,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
+
+import mars.mips.hardware.AccessNotice;
+import mars.mips.hardware.Memory;
 
 
 public class MusicPlayer extends AbstractMarsToolAndApplication
@@ -160,7 +164,7 @@ public class MusicPlayer extends AbstractMarsToolAndApplication
 		{
 			e.printStackTrace();
 		}
-		
+	
 		/*
 		AudioPlayer mpg =  AudioPlayer.player;
 		AudioStream bgm;
@@ -187,7 +191,24 @@ public class MusicPlayer extends AbstractMarsToolAndApplication
 		*/
 		
 	}
+	protected void addAsObserver() 
+	{
+		addAsObserver(Memory.textBaseAddress, Memory.textLimitAddress);
+	}
 
+	protected void processMIPSUpdate(Observable resource, AccessNotice notice) 
+	{
+		if (!notice.accessIsFromMIPS())
+		{
+			musicTextField.setText("NO NOTICE FROM MIPS");
+			return;
+		}
+		if (notice.getAccessType() != AccessNotice.READ) 
+		{
+			musicTextField.setText("CAN NOT READ");
+			return;
+		}
+	}
 	
 
 }
