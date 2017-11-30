@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Observable;
 
 import sun.audio.*;
@@ -25,11 +27,13 @@ import javax.sound.sampled.Clip;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.filechooser.FileSystemView;
 
 import mars.mips.hardware.AccessNotice;
 import mars.mips.hardware.Memory;
@@ -46,11 +50,11 @@ public class MusicPlayer extends AbstractMarsToolAndApplication
 
 	private JLabel statusLabel;
 	private JTextField musicTextField;
-	private JButton tempButton,tempButton2;
+	private JButton playButton,stopButton;
 	
 	private static boolean isPlaying = false;
 	
-	
+
 	protected MusicPlayer(String title, String heading) 
 	{
 		super(title, heading);
@@ -66,67 +70,80 @@ public class MusicPlayer extends AbstractMarsToolAndApplication
         return name;
      }
 	
+	
+    public static void main(String[] args)
+    {
+        new MusicPlayer(heading+", "+version,heading).go();
+    }
+  	
+	
 	@Override
 	protected JComponent buildMainDisplayArea() 
 	{
+ 	   JPanel displayArea = new JPanel();
+ 	   playButton = new JButton("Play");
+ 	   stopButton = new JButton("Stop");
+ 	   statusLabel = new JLabel("Song:");
+ 	   musicTextField = new JTextField(" No song playing ");
+ 	   
+ 	   displayArea.setLayout(new GridBagLayout());
+ 	   GridBagConstraints gc = new GridBagConstraints();
+ 	      
+ 	   
+
+ 	   gc.gridx =1;
+ 	   gc.gridy =1;
+ 	   displayArea.add(statusLabel,gc);
+ 	   
+ 	   gc.gridx =2;
+ 	   gc.gridy =1;
+ 	   displayArea.add(musicTextField,gc);
+ 	   
+ 	   gc.gridx =3;
+ 	   gc.gridy =1;
+ 	   displayArea.add(playButton,gc);
+ 	   
+ 	   gc.gridx =4;
+ 	   gc.gridy =1;
+ 	   displayArea.add(stopButton,gc);
 		
 		try
 		{
-			File music = new File("Hall_of_the_Mountain_King.wav");
+
+
+			URL music = this.getClass().getResource("/resource/Hall_of_the_Mountain_King.wav");
+			
 			Clip clip = AudioSystem.getClip();
 			clip.open(AudioSystem.getAudioInputStream(music));
 		
 		
-	    	   JPanel displayArea = new JPanel();
-	    	   tempButton = new JButton("TEST");
-	    	   tempButton2 = new JButton("Stop");
-	    	   statusLabel = new JLabel("Song:");
-	    	   musicTextField = new JTextField(" No song playing ");
-	    	   
-	    	   displayArea.setLayout(new GridBagLayout());
-	    	   GridBagConstraints gc = new GridBagConstraints();
-	    	      
-	    	   
 
-	    	   gc.gridx =1;
-	    	   gc.gridy =1;
-	    	   displayArea.add(statusLabel,gc);
 	    	   
-	    	   gc.gridx =2;
-	    	   gc.gridy =1;
-	    	   displayArea.add(musicTextField,gc);
-	    	   
-	    	   gc.gridx =3;
-	    	   gc.gridy =1;
-	    	   displayArea.add(tempButton,gc);
-	    	   
-	    	   gc.gridx =4;
-	    	   gc.gridy =1;
-	    	   displayArea.add(tempButton2,gc);
-	    	   
-	    	   tempButton.addActionListener( new ActionListener()
+	    	   playButton.addActionListener( new ActionListener()
 	    		{
 	    			   
 					@Override
 					public void actionPerformed(ActionEvent e) 
 	    	   		{
-						if(e.getSource().equals(tempButton))
+						if(e.getSource().equals(playButton))
 						{
 							music(0,clip);
+							musicTextField.setText(" Song is playing ");
 						}
 						
 					}
 	    			   
 	    			   
 	    		});
-	    	   tempButton2.addActionListener( new ActionListener()
+	    	   stopButton.addActionListener( new ActionListener()
 	    		{
 	    			   
 					@Override
 					public void actionPerformed(ActionEvent e) 
 	    	   		{
-						if(e.getSource().equals(tempButton2))
+						if(e.getSource().equals(stopButton))
 						{
+							musicTextField.setText(" Song is stopped ");
 							music(1,clip);
 						}
 						
@@ -141,23 +158,21 @@ public class MusicPlayer extends AbstractMarsToolAndApplication
 		{
 			e.printStackTrace();
 		}
-		return null;
+		return displayArea;
 	}
 	public static void music(int x,Clip clip)
 	{
 		try
 		{
-
 	
 			if( x == 0) 
 			{
 				clip.start();
+				clip.loop(Clip.LOOP_CONTINUOUSLY);
 			}
 			else if(x ==1)
-			{	
-					//Thread.sleep(clip.getMicrosecondLength()/1000);		
+			{		
 				clip.stop();
-				//clip.close();
 			}
 		}
 		catch(Exception e)
@@ -165,50 +180,9 @@ public class MusicPlayer extends AbstractMarsToolAndApplication
 			e.printStackTrace();
 		}
 	
-		/*
-		AudioPlayer mpg =  AudioPlayer.player;
-		AudioStream bgm;
-		AudioData md;
 		
-		ContinuousAudioDataStream loop = null;
-		
-		try 
-		{
-			bgm = new AudioStream(new FileInputStream("allen_arrogh.wav"));
-			md = bgm.getData();
-			loop = new ContinuousAudioDataStream(md);
-		} 
-		catch (FileNotFoundException e) 
-		{
-			e.printStackTrace();
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
-		
-		mpg.start(loop);
-		*/
-		
-	}
-	protected void addAsObserver() 
-	{
-		addAsObserver(Memory.textBaseAddress, Memory.textLimitAddress);
 	}
 
-	protected void processMIPSUpdate(Observable resource, AccessNotice notice) 
-	{
-		if (!notice.accessIsFromMIPS())
-		{
-			musicTextField.setText("NO NOTICE FROM MIPS");
-			return;
-		}
-		if (notice.getAccessType() != AccessNotice.READ) 
-		{
-			musicTextField.setText("CAN NOT READ");
-			return;
-		}
-	}
 	
 
 }
